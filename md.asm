@@ -312,7 +312,7 @@ byte_910:
 		dc.b (($E000)>>13)		; BackGrd at VRAM $E000 (%00000xxx)
 		dc.b (($BC00)>>9)		; Sprites at VRAM $BC00 (%0xxxxxxy)
 		dc.b $00			; Nothing
-		dc.b $04			; Background color
+		dc.b $00			; Background color
 		dc.b $00			; Nothing
 		dc.b $00			; Nothing
 		dc.b $DF			; HInt value
@@ -353,8 +353,12 @@ MD_Init:
 
 MD_Vint:
 		movem.l	d0-d7/a0-a6,-(sp)
-		
-		move.w	#$8F02,4(a6)			; TEMPORAL start
+
+		move.w	#$8F02,4(a6)
+		move.l	#$78000002,4(a6)
+		move.l	vdpScrlX(a4),(a6)
+		move.l	#$40000010,4(a6)
+		move.l	vdpScrlY(a4),(a6)
 		move.l	#$94019318,4(a6)
 		move.w	#$0100,(z80_bus).l
 		move.l	#$96009500+(((RAM_Fami_Emu+oamSprData)<<7)&$FF0000)|(((RAM_Fami_Emu+oamSprData)>>1)&$FF),4(a6)
@@ -363,7 +367,7 @@ MD_Vint:
 		move.w	#$0002|$80,-(sp)
 .wait:		btst	#0,(z80_bus).l
 		bne.s	.wait
-		move.w	(sp)+,4(a6)			; TEMPORAL end
+		move.w	(sp)+,4(a6)
 		move.w	#$0100,(z80_bus).l
 		move.l	#$94009340,4(a6)
 		move.l	#$96009500+(((RAM_Fami_Emu+vdpPalette)<<7)&$FF0000)|(((RAM_Fami_Emu+vdpPalette)>>1)&$FF),4(a6)
@@ -372,11 +376,8 @@ MD_Vint:
 		move.w	#$0000|$80,-(sp)
 .wait2:		btst	#0,(z80_bus).l
 		bne.s	.wait2
-		move.w	(sp)+,4(a6)			; TEMPORAL end
-		move.l	#$78000002,4(a6)
-		move.l	vdpScrlX(a4),(a6)
-		move.l	#$40000010,4(a6)
-		move.l	vdpScrlY(a4),(a6)
+		move.w	(sp)+,4(a6)
+
 		clr.w	vdpHintSp0(a4)
 		move.w	#1,FamiMdVint(a4)
 		movem.l	(sp)+,d0-d7/a0-a6
@@ -3274,30 +3275,32 @@ wrPPU_Scroll:
 		move.w	ppuNTblBase(a4),d6
 		eori.w	#1,ppuAddrLatch(a4)
 		beq.s	loc_2AA4
+		
 		andi.w	#$FF,d7
-		lsl.b	#2,d6
-		bcc.s	loc_2A9A
-		addi.w	#$100,d7
-loc_2A9A:
+		and.w	#1,d6
+		lsl.w	#8,d6
+		add.w	d6,d7
 		neg.w	d7
 		move.w	d7,vdpScrlX(a4)
 		move.w	d7,vdpScrlX+2(a4)
-
 		jmp	(RAM_EmuLoop).l
-; ----------------------------------------------------------------
+
+; --------------------------------------------------------
+; Vertical
+; --------------------------------------------------------
 
 loc_2AA4:
+		and.w	#$FF,d7
 		addq.w	#8,d7
 		lsl.b	#1,d6
 		bcs.s	loc_2ABE
-; 		add.w	#$F0,d7
 		move.w	d7,vdpScrlY(a4)
+		add.w	#$110,d7
 		move.w	d7,vdpScrlY+2(a4)
 		jmp	(RAM_EmuLoop).l
 loc_2ABE:
-		move.w	d7,d4
-		add.w	#$F0,d7
 		move.w	d7,vdpScrlY+2(a4)
+		add.w	#$110,d7
 		move.w	d7,vdpScrlY(a4)
 		jmp	(RAM_EmuLoop).l
 
@@ -3359,7 +3362,11 @@ ppuSetColor:
 		andi.b	#$3F,d7
 		add.w	d7,d7
 		move.w	ppuVdpColors(pc,d7.w),(a5)
-		
+		lea	(RAM_Fami_Emu+vdpPalette),a5
+; 		move.w	$08(a5),$00(a5)
+; 		move.w	$28(a5),$20(a5)	
+; 		move.w	$38(a5),$30(a5)
+; 		move.w	$48(a5),$40(a5)
 		jmp	(RAM_EmuLoop).l
 ; ----------------------------------------------------------------
 
@@ -3478,7 +3485,7 @@ ppuDrwCell:
 		jmp	(RAM_EmuLoop).l
 .vermirror:
 		and.w	#$3FFF,d6
-		add.w	#$2000+$F00,d6
+		add.w	#$2000,d6
 		or.w	#$4000,d6
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)
@@ -3684,4 +3691,4 @@ EndOfRom:
 ; ROM are here
 ; ----------------------------------------------------------------
 
-ROM_FILE:	binclude "roms/castle.nes"
+ROM_FILE:	binclude "roms/paperboy.nes"
