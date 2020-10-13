@@ -5,7 +5,7 @@ originally made by Mairtrus, so credits to him for his effort...
 
 ** ROMS ARE NOT INCLUDED IN THE SOURCE ***
 
-- Features:
+Features:
 - Original version didn't work on hardware, this one does
 - Added support for another mapper other than mapper0: CNROM
 - Working vertical scrolling (size is different than MD's)

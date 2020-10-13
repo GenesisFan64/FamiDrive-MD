@@ -147,10 +147,10 @@ oamSprData	ds.w 8*70
 		dc.l MD_Entry
 		dc.l MD_Entry
 		dc.b "SEGA MEGA DRIVE "
-		dc.b "(C)GF64 20??.???"
+		dc.b "(C)GF64 2020.???"
 		dc.b "FamiDrive                                       "
 		dc.b "FamiDrive                                       "
-		dc.b "GM KE-00000-00"
+		dc.b "GM HOMEBREW-00"
 		dc.w 0
 		dc.w 0
 		dc.b "              "
@@ -227,7 +227,6 @@ list_InitRegs:	dc.w $8000		; d5
 
 ; =============== S U B	R O U T	I N E =======================================
 
-
 Fami_InitVideo:
 		move.w	#$8F02,4(a6)
 		move.w	#$FFF,d7
@@ -239,8 +238,7 @@ Fami_InitVideo:
 		move.l	#$60000003,4(a6)
 .loopbg:
 		move.w	#$200,(a6)
-		dbf	d7,.loopbg		
-
+		dbf	d7,.loopbg
 		move.l	#$68000002,4(a6)
 		move.l	#0,(a6)
 		move.l	#$40000010,4(a6)
@@ -251,8 +249,6 @@ Fami_InitVideo:
 loc_51E:
 		move.w	#0,(a6)
 		dbf	d7,loc_51E
-		move.l	#$C0020000,4(a6)
-		move.w	#$EEE,(a6)
 		rts
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -3467,7 +3463,7 @@ ppuDrwCell:
 .left_pg:
 		or.w	#$8000,d7
 		or.w	#$4000,d6
-; 		move.w	#$2700,sr
+		move.w	#$2700,sr
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)
 		move.w	d7,(a6)
@@ -3481,7 +3477,7 @@ ppuDrwCell:
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)
 		move.w	d7,(a6)
-; 		move.w	#$2000,sr
+		move.w	#$2000,sr
 		jmp	(RAM_EmuLoop).l
 .vermirror:
 		and.w	#$3FFF,d6
@@ -3490,105 +3486,14 @@ ppuDrwCell:
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)
 		move.w	d7,(a6)
-; 		move.w	#$2000,sr
+		move.w	#$2000,sr
 		jmp	(RAM_EmuLoop).l
 
 ; ----------------------------------------------------------------
 
 ppuDrwCellPal:
+	; TODO: rewrite
 		jmp	(RAM_EmuLoop).l
-
-; 		move.w	#$8F02,4(a6)
-; 		andi.w	#$FFF,d4
-; 		lsl.w	#1,d4
-; 		move.l	d3,-(sp)
-; 		lea	(word_2D8E).l,a5
-; 		move.w	(a5,d4.w),d3
-; 		lsl.w	#1,d4
-; 		lea	(dword_4D8E).l,a5
-; 		move.l	(a5,d4.w),d5
-; 		swap	d7
-; 		andi.w	#$FFC,d4
-; 		cmpi.w	#$FE0,d4
-; 		bcc.w	loc_2C9A
-; 		clr.w	d7
-; 		lsr.l	#2,d7
-; 		lsr.w	#1,d7
-; 		ori.w	#$8000,d7
-; 		move.w	d7,d6
-; 		move.b	1(a2,d3.w),d6
-; 		swap	d6
-; 		move.w	d7,d6
-; 		move.b	3(a2,d3.w),d6
-; 		clr.w	d7
-; 		lsr.l	#2,d7
-; 		lsr.w	#1,d7
-; 		ori.w	#$8000,d7
-; 		move.w	d7,d4
-; 		move.b	5(a2,d3.w),d4
-; 		swap	d4
-; 		move.w	d7,d4
-; 		move.b	7(a2,d3.w),d4
-; 		move.l	d6,(a2,d3.w)
-; 		move.l	d4,4(a2,d3.w)
-; 		move.l	d5,4(a6)
-; 		move.l	d6,(a6)
-; 		move.l	d4,(a6)
-; 		addi.w	#$80,d3
-; 		addi.l	#$800000,d5
-; 		move.b	1(a2,d3.w),d6
-; 		swap	d6
-; 		move.b	3(a2,d3.w),d6
-; 		move.b	5(a2,d3.w),d4
-; 		swap	d4
-; 		move.b	7(a2,d3.w),d4
-; 		move.l	d6,(a2,d3.w)
-; 		move.l	d4,4(a2,d3.w)
-; 		move.l	d5,4(a6)
-; 		move.l	d6,(a6)
-; 		move.l	d4,(a6)
-; 		addi.w	#$80,d3
-; 		addi.l	#$800000,d5
-; loc_2C9A:
-; 		clr.w	d7
-; 		lsr.l	#2,d7
-; 		lsr.w	#1,d7
-; 		ori.w	#$8000,d7
-; 		move.w	d7,d6
-; 		move.b	1(a2,d3.w),d6
-; 		swap	d6
-; 		move.w	d7,d6
-; 		move.b	3(a2,d3.w),d6
-; 		clr.w	d7
-; 		lsr.l	#2,d7
-; 		lsr.w	#1,d7
-; 		ori.w	#$8000,d7
-; 		move.w	d7,d4
-; 		move.b	5(a2,d3.w),d4
-; 		swap	d4
-; 		move.w	d7,d4
-; 		move.b	7(a2,d3.w),d4
-; 		move.l	d6,(a2,d3.w)
-; 		move.l	d4,4(a2,d3.w)
-; 		move.l	d5,4(a6)
-; 		move.l	d6,(a6)
-; 		move.l	d4,(a6)
-; 		addi.w	#$80,d3
-; 		addi.l	#$800000,d5
-; 		move.b	1(a2,d3.w),d6
-; 		swap	d6
-; 		move.b	3(a2,d3.w),d6
-; 		move.b	5(a2,d3.w),d4
-; 		swap	d4
-; 		move.b	7(a2,d3.w),d4
-; 		move.l	d6,(a2,d3.w)
-; 		move.l	d4,4(a2,d3.w)
-; 		move.l	d5,4(a6)
-; 		move.l	d6,(a6)
-; 		move.l	d4,(a6)
-; 		move.l	(sp)+,d3
-; 		jmp	(RAM_EmuLoop).l
-; ----------------------------------------------------------------
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -3624,6 +3529,8 @@ loc_29E2:
 
 ; =============== S U B	R O U T	I N E =======================================
 
+; a6 - $C00000
+; a4 - RAM_Fami_Emu
 
 Nemul_LoadChr:
 		move.w	#$2700,sr
