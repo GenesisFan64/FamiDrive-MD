@@ -3548,6 +3548,7 @@ ppuDrwCell:
 		tst.w	ppuMirror(a4)		; check horizontal mirror
 		bne.s	.vermirror
 
+		and.w	#$3FFF,d6
 		bchg	#6,d6
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)
@@ -3561,6 +3562,7 @@ ppuDrwCell:
 		move.w	#$2000,sr
 		jmp	(RAM_EmuLoop).l
 .vermirror:
+		and.w	#$3FFF,d6
 		add.w	#$2000,d6
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)

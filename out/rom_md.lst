@@ -1,4 +1,4 @@
- AS V1.42 Beta [Bld 118] - source file md.asm - page 1 - 10/15/2020 18:03:21
+ AS V1.42 Beta [Bld 118] - source file md.asm - page 1 - 10/15/2020 18:09:24
 
 
        1/       0 :                     ; ===========================================================================
@@ -770,7 +770,7 @@
      420/     496 : 47F9 FFFF 8000      		lea	(RAM_Fami_Emu).l,a3
      421/     49C : 7E00                		moveq	#0,d7			; PRG-ROM copy
      422/     49E : 1E28 0004           		move.b	4(a0),d7
-     423/     4A2 : 6100 1BBC           		bsr	romGrabPrg
+     423/     4A2 : 6100 1BC4           		bsr	romGrabPrg
      424/     4A6 : 1E28 0006           		move.b	6(a0),d7		; PPU mirroring
      425/     4AA : 1C28 0007           		move.b	7(a0),d6
      426/     4AE : CE7C 00F0           		and.w	#%11110000,d7
@@ -811,7 +811,7 @@
      461/     500 : 49F8 8000           		lea 	(RAM_Fami_Emu),a4
      462/     504 : 47F8 A000           		lea	(RAM_Fami_PPU).w,a3
      463/     508 : 45F8 9000           		lea	(RAM_Fami_RAM).w,a2
-     464/     50C : 6100 1B9A           		bsr	Nemul_LoadChr
+     464/     50C : 6100 1BA2           		bsr	Nemul_LoadChr
      465/     510 : 43F9 FFFF 0000      		lea 	(RAM_Fami_ROM),a1	; PRG base
      466/     516 : 2049                		movea.l	a1,a0
      467/     518 : 303C 7FFC           		move.w	#cpuEntry,d0		; go to Entry
@@ -3449,7 +3449,7 @@
     3096/    1AFC : 28DD                		move.l	(a5)+,(a4)+
     3097/    1AFE : 51CC FFFC           		dbf	d4,.copychr
     3098/    1B02 : 285F                		move.l	(sp)+,a4
-    3099/    1B04 : 6100 05A2           		bsr	Nemul_LoadChr
+    3099/    1B04 : 6100 05AA           		bsr	Nemul_LoadChr
     3100/    1B08 : 4EF9 FFFF 8FF0      		jmp	(RAM_EmuLoop).l
     3101/    1B0E :                     
     3102/    1B0E :                     ; ====================================================================
@@ -3647,7 +3647,7 @@
     3294/    1C68 : BC6C 0040           		cmp.w	ppuChrBank(a4),d6
     3295/    1C6C : 6708                		beq.s	.no_reload
     3296/    1C6E : 3946 0040           		move.w	d6,ppuChrBank(a4)
-    3297/    1C72 : 6100 0434           		bsr	Nemul_LoadChr
+    3297/    1C72 : 6100 043C           		bsr	Nemul_LoadChr
     3298/    1C76 :                     .no_reload:
     3299/    1C76 :                     
     3300/    1C76 :                     	; PPU VRAM increment
@@ -3759,7 +3759,7 @@
     3406/    1D68 : 0245 03C0           		andi.w	#$3C0,d5
     3407/    1D6C : 0C45 03C0           		cmpi.w	#$3C0,d5
     3408/    1D70 : 6600 00F6           		bne.w	ppuDrwCell
-    3409/    1D74 : 6000 01B6           		bra.w	ppuDrwCellPal
+    3409/    1D74 : 6000 01BE           		bra.w	ppuDrwCellPal
     3410/    1D78 :                     ; ----------------------------------------------------------------
     3411/    1D78 :                     
     3412/    1D78 :                     ppuVdpIndex:
@@ -3899,268 +3899,270 @@
     3546/    1EC2 : C87C 3FFF           		and.w	#$3FFF,d4
     3547/    1EC6 :                     
     3548/    1EC6 : 4A6C 002E           		tst.w	ppuMirror(a4)		; check horizontal mirror
-    3549/    1ECA : 6630                		bne.s	.vermirror
+    3549/    1ECA : 6634                		bne.s	.vermirror
     3550/    1ECC :                     
-    3551/    1ECC : 0846 0006           		bchg	#6,d6
-    3552/    1ED0 : 3D46 0004           		move.w	d6,4(a6)
-    3553/    1ED4 : 3D7C 0003 0004      		move.w	#3,4(a6)
-    3554/    1EDA : 3816                		move.w	(a6),d4
-    3555/    1EDC : C87C E000           		and.w	#$E000,d4
-    3556/    1EE0 : 8847                		or.w	d7,d4
-    3557/    1EE2 : 8C7C 4000           		or.w	#$4000,d6
-    3558/    1EE6 : 3D46 0004           		move.w	d6,4(a6)
-    3559/    1EEA : 3D7C 0003 0004      		move.w	#3,4(a6)
-    3560/    1EF0 : 3C84                		move.w	d4,(a6)
-    3561/    1EF2 : 46FC 2000           		move.w	#$2000,sr
-    3562/    1EF6 : 4EF9 FFFF 8FF0      		jmp	(RAM_EmuLoop).l
-    3563/    1EFC :                     .vermirror:
-    3564/    1EFC : DC7C 2000           		add.w	#$2000,d6
-    3565/    1F00 : 3D46 0004           		move.w	d6,4(a6)
-    3566/    1F04 : 3D7C 0003 0004      		move.w	#3,4(a6)
-    3567/    1F0A : 3816                		move.w	(a6),d4
-    3568/    1F0C : C87C E000           		and.w	#$E000,d4
-    3569/    1F10 : 8847                		or.w	d7,d4
-    3570/    1F12 : 8C7C 4000           		or.w	#$4000,d6
-    3571/    1F16 : 3D46 0004           		move.w	d6,4(a6)
-    3572/    1F1A : 3D7C 0003 0004      		move.w	#3,4(a6)
-    3573/    1F20 : 3C84                		move.w	d4,(a6)
-    3574/    1F22 :                     
-    3575/    1F22 : 46FC 2000           		move.w	#$2000,sr
-    3576/    1F26 : 4EF9 FFFF 8FF0      		jmp	(RAM_EmuLoop).l
-    3577/    1F2C :                     
-    3578/    1F2C :                     ; ----------------------------------------------------------------
-    3579/    1F2C :                     ; Pick Tile 16x16 color
-    3580/    1F2C :                     
-    3581/    1F2C :                     ppuDrwCellPal:
-    3582/    1F2C :                     	; d4 - Page
-    3583/    1F2C :                     	; d5 - X pos
-    3584/    1F2C :                     	; d6 - Y pos
-    3585/    1F2C :                     	; d7 - attr
-    3586/    1F2C : 3A04                		move.w	d4,d5
-    3587/    1F2E : 3C04                		move.w	d4,d6
-    3588/    1F30 : CA7C 0007           		and.w	#%111,d5
-    3589/    1F34 : E74D                		lsl.w	#3,d5
-    3590/    1F36 : CC7C 0038           		and.w	#%111000,d6
-    3591/    1F3A : ED4E                		lsl.w	#6,d6
-    3592/    1F3C : 4847                		swap	d7
-    3593/    1F3E : 3E04                		move.w	d4,d7
-    3594/    1F40 : CE7C 0C00           		and.w	#$C00,d7
-    3595/    1F44 : E04F                		lsr.w	#8,d7
-    3596/    1F46 : E44F                		lsr.w	#2,d7
-    3597/    1F48 : 0807 0001           		btst	#1,d7
-    3598/    1F4C : 6704                		beq.s	.top_lyr
-    3599/    1F4E : DC7C 2000           		add.w	#$2000,d6
-    3600/    1F52 :                     .top_lyr:
-    3601/    1F52 : 0807 0000           		btst	#0,d7
-    3602/    1F56 : 6704                		beq.s	.left_pg
-    3603/    1F58 : DC7C 0040           		add.w	#$40,d6
-    3604/    1F5C :                     .left_pg:
-    3605/    1F5C : 4847                		swap	d7
-    3606/    1F5E : 383C 0000           		move.w	#$0000,d4
-    3607/    1F62 : D846                		add.w	d6,d4
-    3608/    1F64 : D845                		add.w	d5,d4
-    3609/    1F66 :                     
-    3610/    1F66 :                     	; d4 - VDP address
-    3611/    1F66 :                     	; d5 - Palette bits
-    3612/    1F66 : 4847                		swap	d7
-    3613/    1F68 : 3E04                		move.w	d4,d7
-    3614/    1F6A : 4847                		swap	d7
-    3615/    1F6C : 611E                		bsr.s	.make_attr
-    3616/    1F6E : 4A6C 002E           		tst.w	ppuMirror(a4)		; check horizontal mirror
-    3617/    1F72 : 6606                		bne	.vert_mirr
-    3618/    1F74 : 4EF9 FFFF 8FF0      		jmp	(RAM_EmuLoop).l
-    3619/    1F7A :                     .vert_mirr:
-    3620/    1F7A : 4847                		swap	d7
-    3621/    1F7C : 3807                		move.w	d7,d4
-    3622/    1F7E : 4847                		swap	d7
-    3623/    1F80 : D87C 2000           		add.w	#$2000,d4
-    3624/    1F84 : 6106                		bsr.s	.make_attr
-    3625/    1F86 : 4EF9 FFFF 8FF0      		jmp	(RAM_EmuLoop).l
-    3626/    1F8C :                     
-    3627/    1F8C :                     ; ----------------------------------------------------------------
-    3628/    1F8C :                     ; d4 - VDP plane pos
-    3629/    1F8C :                     ; d7 - pal bits
-    3630/    1F8C :                     
-    3631/    1F8C :                     .make_attr:
-    3632/    1F8C : 7A00                		moveq	#0,d5			; TL
-    3633/    1F8E : 1A07                		move.b	d7,d5
-    3634/    1F90 : CA7C 0003           		and.w	#%11,d5
-    3635/    1F94 : E14D                		lsl.w	#8,d5
-    3636/    1F96 : EB4D                		lsl.w	#5,d5
-    3637/    1F98 : 4845                		swap	d5
-    3638/    1F9A : 1A07                		move.b	d7,d5
-    3639/    1F9C : CA7C 0003           		and.w	#%11,d5
-    3640/    1FA0 : E14D                		lsl.w	#8,d5
-    3641/    1FA2 : EB4D                		lsl.w	#5,d5
-    3642/    1FA4 : 6158                		bsr	.pick_color
-    3643/    1FA6 : D87C 0004           		add.w	#4,d4			; TR
-    3644/    1FAA : 7A00                		moveq	#0,d5
-    3645/    1FAC : 1A07                		move.b	d7,d5
-    3646/    1FAE : CA7C 000C           		and.w	#%1100,d5
-    3647/    1FB2 : E14D                		lsl.w	#8,d5
-    3648/    1FB4 : E74D                		lsl.w	#3,d5
-    3649/    1FB6 : 4845                		swap	d5
-    3650/    1FB8 : 1A07                		move.b	d7,d5
-    3651/    1FBA : CA7C 000C           		and.w	#%1100,d5
-    3652/    1FBE : E14D                		lsl.w	#8,d5
-    3653/    1FC0 : E74D                		lsl.w	#3,d5
-    3654/    1FC2 : 613A                		bsr	.pick_color
-    3655/    1FC4 : 987C 0004           		sub.w	#4,d4			; BL
-    3656/    1FC8 : D87C 0100           		add.w	#$100,d4
-    3657/    1FCC : 7A00                		moveq	#0,d5
-    3658/    1FCE : 1A07                		move.b	d7,d5
-    3659/    1FD0 : CA7C 0030           		and.w	#%110000,d5
-    3660/    1FD4 : E14D                		lsl.w	#8,d5
-    3661/    1FD6 : E34D                		lsl.w	#1,d5
-    3662/    1FD8 : 4845                		swap	d5
-    3663/    1FDA : 1A07                		move.b	d7,d5
-    3664/    1FDC : CA7C 0030           		and.w	#%110000,d5
-    3665/    1FE0 : E14D                		lsl.w	#8,d5
-    3666/    1FE2 : E34D                		lsl.w	#1,d5
-    3667/    1FE4 : 6118                		bsr	.pick_color
-    3668/    1FE6 : D87C 0004           		add.w	#4,d4			; BR
-    3669/    1FEA : 7A00                		moveq	#0,d5
-    3670/    1FEC : 1A07                		move.b	d7,d5
-    3671/    1FEE : CA7C 00C0           		and.w	#%11000000,d5
-    3672/    1FF2 : EF4D                		lsl.w	#7,d5
-    3673/    1FF4 : 4845                		swap	d5
-    3674/    1FF6 : 1A07                		move.b	d7,d5
-    3675/    1FF8 : CA7C 00C0           		and.w	#%11000000,d5
-    3676/    1FFC : EF4D                		lsl.w	#7,d5
-    3677/    1FFE :                     ; 		bsr	.pick_color
-    3678/    1FFE :                     
-    3679/    1FFE :                     .pick_color:
-    3680/    1FFE : 46FC 2700           		move.w	#$2700,sr
-    3681/    2002 : 3D44 0004           		move.w	d4,4(a6)
-    3682/    2006 : 3D7C 0003 0004      		move.w	#3,4(a6)
-    3683/    200C : 2C16                		move.l	(a6),d6
-    3684/    200E : CCBC 9FFF 9FFF      		and.l	#$9FFF9FFF,d6
-    3685/    2014 : 8C85                		or.l	d5,d6
-    3686/    2016 : 887C 4000           		or.w	#$4000,d4
-    3687/    201A : 3D44 0004           		move.w	d4,4(a6)
-    3688/    201E : 3D7C 0003 0004      		move.w	#3,4(a6)
-    3689/    2024 : 2C86                		move.l	d6,(a6)
-    3690/    2026 : C87C 3FFF           		and.w	#$3FFF,d4
-    3691/    202A : D87C 0080           		add.w	#$80,d4
-    3692/    202E : 3D44 0004           		move.w	d4,4(a6)
-    3693/    2032 : 3D7C 0003 0004      		move.w	#3,4(a6)
-    3694/    2038 : 2C16                		move.l	(a6),d6
-    3695/    203A : CCBC 9FFF 9FFF      		and.l	#$9FFF9FFF,d6
-    3696/    2040 : 8C85                		or.l	d5,d6
-    3697/    2042 : 887C 4000           		or.w	#$4000,d4
-    3698/    2046 : 3D44 0004           		move.w	d4,4(a6)
-    3699/    204A : 3D7C 0003 0004      		move.w	#3,4(a6)
-    3700/    2050 : 2C86                		move.l	d6,(a6)
-    3701/    2052 : C87C 3FFF           		and.w	#$3FFF,d4
-    3702/    2056 : 987C 0080           		sub.w	#$80,d4
-    3703/    205A : 46FC 2000           		move.w	#$2000,sr
-    3704/    205E : 4E75                		rts
-    3705/    2060 :                     
-    3706/    2060 :                     ; =============== S U B	R O U T	I N E =======================================
-    3707/    2060 :                     
-    3708/    2060 :                     
-    3709/    2060 :                     romGrabPrg:
-    3710/    2060 : 49E8 0010           		lea	$10(a0),a4
-    3711/    2064 : 0C07 0001           		cmpi.b	#1,d7
-    3712/    2068 : 6700 000C           		beq.w	loc_29C0
-    3713/    206C : 0C07 0002           		cmpi.b	#2,d7
-    3714/    2070 : 6700 0022           		beq.w	loc_29D8
-    3715/    2074 : 4E42                		trap	#2
-    3716/    2076 :                     ; ----------------------------------------------------------------
-    3717/    2076 :                     loc_29C0:
-    3718/    2076 : 4BF9 FFFF 0000      		lea	(RAM_Fami_ROM).l,a5
-    3719/    207C : 47F9 FFFF 4000      		lea	(RAM_Fami_ROM+$4000).l,a3
-    3720/    2082 : 2E3C 0000 0FFF      		move.l	#$FFF,d7
-    3721/    2088 :                     .rom_1:
-    3722/    2088 : 261C                		move.l	(a4)+,d3
-    3723/    208A : 2AC3                		move.l	d3,(a5)+
-    3724/    208C : 26C3                		move.l	d3,(a3)+
-    3725/    208E : 51CF FFF8           		dbf	d7,.rom_1
-    3726/    2092 : 4E75                		rts
-    3727/    2094 :                     ; ----------------------------------------------------------------
-    3728/    2094 :                     
-    3729/    2094 :                     loc_29D8:
-    3730/    2094 : 4BF9 FFFF 0000      		lea	(RAM_Fami_ROM).l,a5
-    3731/    209A : 2E3C 0000 1FFF      		move.l	#$1FFF,d7
-    3732/    20A0 :                     loc_29E2:
-    3733/    20A0 : 2ADC                		move.l	(a4)+,(a5)+
-    3734/    20A2 : 51CF FFFC           		dbf	d7,loc_29E2
-    3735/    20A6 : 4E75                		rts
-    3736/    20A8 :                     
-    3737/    20A8 :                     ; =============== S U B	R O U T	I N E =======================================
-    3738/    20A8 :                     
-    3739/    20A8 :                     ; a6 - $C00000
-    3740/    20A8 :                     ; a4 - RAM_Fami_Emu
-    3741/    20A8 :                     
-    3742/    20A8 :                     Nemul_LoadChr:
-    3743/    20A8 : 46FC 2700           		move.w	#$2700,sr
-    3744/    20AC : 3D7C 8F02 0004      		move.w	#$8F02,4(a6)
-    3745/    20B2 : 2D7C 4000 0000 0004 		move.l	#$40000000,4(a6)
-    3746/    20BA : 7A00                		moveq	#0,d5
-    3747/    20BC : 3C2C 0040           		move.w	ppuChrBank(a4),d6
-    3748/    20C0 : 6100 0014           		bsr.w	.make_chr
-    3749/    20C4 : 7A08                		moveq	#8,d5
-    3750/    20C6 : 3C2C 0040           		move.w	ppuChrBank(a4),d6
-    3751/    20CA : E30E                		lsl.b	#1,d6
-    3752/    20CC : 6100 0008           		bsr.w	.make_chr
-    3753/    20D0 : 46FC 2000           		move.w	#$2000,sr
-    3754/    20D4 : 4E75                		rts
-    3755/    20D6 :                     
-    3756/    20D6 :                     .make_chr:
-    3757/    20D6 : 2A4B                		movea.l	a3,a5
-    3758/    20D8 : E30E                		lsl.b	#1,d6
-    3759/    20DA : 6406                		bcc.s	loc_8DBA
-    3760/    20DC : DBFC 0000 1000      		adda.l	#$1000,a5
-    3761/    20E2 :                     loc_8DBA:
-    3762/    20E2 : 48E7 FF00           		movem.l	d0-d2/d3-d7,-(sp)
-    3763/    20E6 : 2E3C 0000 00FF      		move.l	#$FF,d7
-    3764/    20EC :                     loc_8DC4:
-    3765/    20EC : 7607                		moveq	#7,d3
-    3766/    20EE :                     loc_8DC6:
-    3767/    20EE : 1215                		move.b	(a5),d1
-    3768/    20F0 : 142D 0008           		move.b	8(a5),d2
-    3769/    20F4 : 7000                		moveq	#0,d0
-    3770/    20F6 : 7C07                		moveq	#7,d6
-    3771/    20F8 :                     loc_8DD0:
-    3772/    20F8 : D402                		add.b	d2,d2
-    3773/    20FA : D140                		addx.w	d0,d0
-    3774/    20FC : D201                		add.b	d1,d1
-    3775/    20FE : D140                		addx.w	d0,d0
-    3776/    2100 : 51CE FFF6           		dbf	d6,loc_8DD0
-    3777/    2104 : 7800                		moveq	#0,d4
-    3778/    2106 : 7C07                		moveq	#7,d6
-    3779/    2108 :                     loc_8DE0:
-    3780/    2108 : 1200                		move.b	d0,d1
-    3781/    210A : E448                		lsr.w	#2,d0
-    3782/    210C : 0281 0000 0003      		andi.l	#3,d1
-    3783/    2112 : 6702                		beq.s	loc_8DEE
-    3784/    2114 : 8205                		or.b	d5,d1
-    3785/    2116 :                     loc_8DEE:
-    3786/    2116 : 8801                		or.b	d1,d4
-    3787/    2118 : E89C                		ror.l	#4,d4
-    3788/    211A : 51CE FFEC           		dbf	d6,loc_8DE0
-    3789/    211E : 2C84                		move.l	d4,(a6)
-    3790/    2120 : 528D                		addq.l	#1,a5
-    3791/    2122 : 51CB FFCA           		dbf	d3,loc_8DC6
-    3792/    2126 : 508D                		addq.l	#8,a5
-    3793/    2128 : 51CF FFC2           		dbf	d7,loc_8DC4
-    3794/    212C : 4CDF 00FF           		movem.l	(sp)+,d0-d2/d3-d7
-    3795/    2130 :                     return_8E08:
-    3796/    2130 : 4E75                		rts
-    3797/    2132 :                     
-    3798/    2132 :                     ; ====================================================================
-    3799/    2132 :                     
-    3800/    2132 :                     		align $8000
-    3801/    8000 :                     EndOfRom:
-    3802/    8000 :                     
-    3803/    8000 :                     ; ====================================================================
-    3804/    8000 :                     ; ----------------------------------------------------------------
-    3805/    8000 :                     ; ROM are here
+    3551/    1ECC : CC7C 3FFF           		and.w	#$3FFF,d6
+    3552/    1ED0 : 0846 0006           		bchg	#6,d6
+    3553/    1ED4 : 3D46 0004           		move.w	d6,4(a6)
+    3554/    1ED8 : 3D7C 0003 0004      		move.w	#3,4(a6)
+    3555/    1EDE : 3816                		move.w	(a6),d4
+    3556/    1EE0 : C87C E000           		and.w	#$E000,d4
+    3557/    1EE4 : 8847                		or.w	d7,d4
+    3558/    1EE6 : 8C7C 4000           		or.w	#$4000,d6
+    3559/    1EEA : 3D46 0004           		move.w	d6,4(a6)
+    3560/    1EEE : 3D7C 0003 0004      		move.w	#3,4(a6)
+    3561/    1EF4 : 3C84                		move.w	d4,(a6)
+    3562/    1EF6 : 46FC 2000           		move.w	#$2000,sr
+    3563/    1EFA : 4EF9 FFFF 8FF0      		jmp	(RAM_EmuLoop).l
+    3564/    1F00 :                     .vermirror:
+    3565/    1F00 : CC7C 3FFF           		and.w	#$3FFF,d6
+    3566/    1F04 : DC7C 2000           		add.w	#$2000,d6
+    3567/    1F08 : 3D46 0004           		move.w	d6,4(a6)
+    3568/    1F0C : 3D7C 0003 0004      		move.w	#3,4(a6)
+    3569/    1F12 : 3816                		move.w	(a6),d4
+    3570/    1F14 : C87C E000           		and.w	#$E000,d4
+    3571/    1F18 : 8847                		or.w	d7,d4
+    3572/    1F1A : 8C7C 4000           		or.w	#$4000,d6
+    3573/    1F1E : 3D46 0004           		move.w	d6,4(a6)
+    3574/    1F22 : 3D7C 0003 0004      		move.w	#3,4(a6)
+    3575/    1F28 : 3C84                		move.w	d4,(a6)
+    3576/    1F2A :                     
+    3577/    1F2A : 46FC 2000           		move.w	#$2000,sr
+    3578/    1F2E : 4EF9 FFFF 8FF0      		jmp	(RAM_EmuLoop).l
+    3579/    1F34 :                     
+    3580/    1F34 :                     ; ----------------------------------------------------------------
+    3581/    1F34 :                     ; Pick Tile 16x16 color
+    3582/    1F34 :                     
+    3583/    1F34 :                     ppuDrwCellPal:
+    3584/    1F34 :                     	; d4 - Page
+    3585/    1F34 :                     	; d5 - X pos
+    3586/    1F34 :                     	; d6 - Y pos
+    3587/    1F34 :                     	; d7 - attr
+    3588/    1F34 : 3A04                		move.w	d4,d5
+    3589/    1F36 : 3C04                		move.w	d4,d6
+    3590/    1F38 : CA7C 0007           		and.w	#%111,d5
+    3591/    1F3C : E74D                		lsl.w	#3,d5
+    3592/    1F3E : CC7C 0038           		and.w	#%111000,d6
+    3593/    1F42 : ED4E                		lsl.w	#6,d6
+    3594/    1F44 : 4847                		swap	d7
+    3595/    1F46 : 3E04                		move.w	d4,d7
+    3596/    1F48 : CE7C 0C00           		and.w	#$C00,d7
+    3597/    1F4C : E04F                		lsr.w	#8,d7
+    3598/    1F4E : E44F                		lsr.w	#2,d7
+    3599/    1F50 : 0807 0001           		btst	#1,d7
+    3600/    1F54 : 6704                		beq.s	.top_lyr
+    3601/    1F56 : DC7C 2000           		add.w	#$2000,d6
+    3602/    1F5A :                     .top_lyr:
+    3603/    1F5A : 0807 0000           		btst	#0,d7
+    3604/    1F5E : 6704                		beq.s	.left_pg
+    3605/    1F60 : DC7C 0040           		add.w	#$40,d6
+    3606/    1F64 :                     .left_pg:
+    3607/    1F64 : 4847                		swap	d7
+    3608/    1F66 : 383C 0000           		move.w	#$0000,d4
+    3609/    1F6A : D846                		add.w	d6,d4
+    3610/    1F6C : D845                		add.w	d5,d4
+    3611/    1F6E :                     
+    3612/    1F6E :                     	; d4 - VDP address
+    3613/    1F6E :                     	; d5 - Palette bits
+    3614/    1F6E : 4847                		swap	d7
+    3615/    1F70 : 3E04                		move.w	d4,d7
+    3616/    1F72 : 4847                		swap	d7
+    3617/    1F74 : 611E                		bsr.s	.make_attr
+    3618/    1F76 : 4A6C 002E           		tst.w	ppuMirror(a4)		; check horizontal mirror
+    3619/    1F7A : 6606                		bne	.vert_mirr
+    3620/    1F7C : 4EF9 FFFF 8FF0      		jmp	(RAM_EmuLoop).l
+    3621/    1F82 :                     .vert_mirr:
+    3622/    1F82 : 4847                		swap	d7
+    3623/    1F84 : 3807                		move.w	d7,d4
+    3624/    1F86 : 4847                		swap	d7
+    3625/    1F88 : D87C 2000           		add.w	#$2000,d4
+    3626/    1F8C : 6106                		bsr.s	.make_attr
+    3627/    1F8E : 4EF9 FFFF 8FF0      		jmp	(RAM_EmuLoop).l
+    3628/    1F94 :                     
+    3629/    1F94 :                     ; ----------------------------------------------------------------
+    3630/    1F94 :                     ; d4 - VDP plane pos
+    3631/    1F94 :                     ; d7 - pal bits
+    3632/    1F94 :                     
+    3633/    1F94 :                     .make_attr:
+    3634/    1F94 : 7A00                		moveq	#0,d5			; TL
+    3635/    1F96 : 1A07                		move.b	d7,d5
+    3636/    1F98 : CA7C 0003           		and.w	#%11,d5
+    3637/    1F9C : E14D                		lsl.w	#8,d5
+    3638/    1F9E : EB4D                		lsl.w	#5,d5
+    3639/    1FA0 : 4845                		swap	d5
+    3640/    1FA2 : 1A07                		move.b	d7,d5
+    3641/    1FA4 : CA7C 0003           		and.w	#%11,d5
+    3642/    1FA8 : E14D                		lsl.w	#8,d5
+    3643/    1FAA : EB4D                		lsl.w	#5,d5
+    3644/    1FAC : 6158                		bsr	.pick_color
+    3645/    1FAE : D87C 0004           		add.w	#4,d4			; TR
+    3646/    1FB2 : 7A00                		moveq	#0,d5
+    3647/    1FB4 : 1A07                		move.b	d7,d5
+    3648/    1FB6 : CA7C 000C           		and.w	#%1100,d5
+    3649/    1FBA : E14D                		lsl.w	#8,d5
+    3650/    1FBC : E74D                		lsl.w	#3,d5
+    3651/    1FBE : 4845                		swap	d5
+    3652/    1FC0 : 1A07                		move.b	d7,d5
+    3653/    1FC2 : CA7C 000C           		and.w	#%1100,d5
+    3654/    1FC6 : E14D                		lsl.w	#8,d5
+    3655/    1FC8 : E74D                		lsl.w	#3,d5
+    3656/    1FCA : 613A                		bsr	.pick_color
+    3657/    1FCC : 987C 0004           		sub.w	#4,d4			; BL
+    3658/    1FD0 : D87C 0100           		add.w	#$100,d4
+    3659/    1FD4 : 7A00                		moveq	#0,d5
+    3660/    1FD6 : 1A07                		move.b	d7,d5
+    3661/    1FD8 : CA7C 0030           		and.w	#%110000,d5
+    3662/    1FDC : E14D                		lsl.w	#8,d5
+    3663/    1FDE : E34D                		lsl.w	#1,d5
+    3664/    1FE0 : 4845                		swap	d5
+    3665/    1FE2 : 1A07                		move.b	d7,d5
+    3666/    1FE4 : CA7C 0030           		and.w	#%110000,d5
+    3667/    1FE8 : E14D                		lsl.w	#8,d5
+    3668/    1FEA : E34D                		lsl.w	#1,d5
+    3669/    1FEC : 6118                		bsr	.pick_color
+    3670/    1FEE : D87C 0004           		add.w	#4,d4			; BR
+    3671/    1FF2 : 7A00                		moveq	#0,d5
+    3672/    1FF4 : 1A07                		move.b	d7,d5
+    3673/    1FF6 : CA7C 00C0           		and.w	#%11000000,d5
+    3674/    1FFA : EF4D                		lsl.w	#7,d5
+    3675/    1FFC : 4845                		swap	d5
+    3676/    1FFE : 1A07                		move.b	d7,d5
+    3677/    2000 : CA7C 00C0           		and.w	#%11000000,d5
+    3678/    2004 : EF4D                		lsl.w	#7,d5
+    3679/    2006 :                     ; 		bsr	.pick_color
+    3680/    2006 :                     
+    3681/    2006 :                     .pick_color:
+    3682/    2006 : 46FC 2700           		move.w	#$2700,sr
+    3683/    200A : 3D44 0004           		move.w	d4,4(a6)
+    3684/    200E : 3D7C 0003 0004      		move.w	#3,4(a6)
+    3685/    2014 : 2C16                		move.l	(a6),d6
+    3686/    2016 : CCBC 9FFF 9FFF      		and.l	#$9FFF9FFF,d6
+    3687/    201C : 8C85                		or.l	d5,d6
+    3688/    201E : 887C 4000           		or.w	#$4000,d4
+    3689/    2022 : 3D44 0004           		move.w	d4,4(a6)
+    3690/    2026 : 3D7C 0003 0004      		move.w	#3,4(a6)
+    3691/    202C : 2C86                		move.l	d6,(a6)
+    3692/    202E : C87C 3FFF           		and.w	#$3FFF,d4
+    3693/    2032 : D87C 0080           		add.w	#$80,d4
+    3694/    2036 : 3D44 0004           		move.w	d4,4(a6)
+    3695/    203A : 3D7C 0003 0004      		move.w	#3,4(a6)
+    3696/    2040 : 2C16                		move.l	(a6),d6
+    3697/    2042 : CCBC 9FFF 9FFF      		and.l	#$9FFF9FFF,d6
+    3698/    2048 : 8C85                		or.l	d5,d6
+    3699/    204A : 887C 4000           		or.w	#$4000,d4
+    3700/    204E : 3D44 0004           		move.w	d4,4(a6)
+    3701/    2052 : 3D7C 0003 0004      		move.w	#3,4(a6)
+    3702/    2058 : 2C86                		move.l	d6,(a6)
+    3703/    205A : C87C 3FFF           		and.w	#$3FFF,d4
+    3704/    205E : 987C 0080           		sub.w	#$80,d4
+    3705/    2062 : 46FC 2000           		move.w	#$2000,sr
+    3706/    2066 : 4E75                		rts
+    3707/    2068 :                     
+    3708/    2068 :                     ; =============== S U B	R O U T	I N E =======================================
+    3709/    2068 :                     
+    3710/    2068 :                     
+    3711/    2068 :                     romGrabPrg:
+    3712/    2068 : 49E8 0010           		lea	$10(a0),a4
+    3713/    206C : 0C07 0001           		cmpi.b	#1,d7
+    3714/    2070 : 6700 000C           		beq.w	loc_29C0
+    3715/    2074 : 0C07 0002           		cmpi.b	#2,d7
+    3716/    2078 : 6700 0022           		beq.w	loc_29D8
+    3717/    207C : 4E42                		trap	#2
+    3718/    207E :                     ; ----------------------------------------------------------------
+    3719/    207E :                     loc_29C0:
+    3720/    207E : 4BF9 FFFF 0000      		lea	(RAM_Fami_ROM).l,a5
+    3721/    2084 : 47F9 FFFF 4000      		lea	(RAM_Fami_ROM+$4000).l,a3
+    3722/    208A : 2E3C 0000 0FFF      		move.l	#$FFF,d7
+    3723/    2090 :                     .rom_1:
+    3724/    2090 : 261C                		move.l	(a4)+,d3
+    3725/    2092 : 2AC3                		move.l	d3,(a5)+
+    3726/    2094 : 26C3                		move.l	d3,(a3)+
+    3727/    2096 : 51CF FFF8           		dbf	d7,.rom_1
+    3728/    209A : 4E75                		rts
+    3729/    209C :                     ; ----------------------------------------------------------------
+    3730/    209C :                     
+    3731/    209C :                     loc_29D8:
+    3732/    209C : 4BF9 FFFF 0000      		lea	(RAM_Fami_ROM).l,a5
+    3733/    20A2 : 2E3C 0000 1FFF      		move.l	#$1FFF,d7
+    3734/    20A8 :                     loc_29E2:
+    3735/    20A8 : 2ADC                		move.l	(a4)+,(a5)+
+    3736/    20AA : 51CF FFFC           		dbf	d7,loc_29E2
+    3737/    20AE : 4E75                		rts
+    3738/    20B0 :                     
+    3739/    20B0 :                     ; =============== S U B	R O U T	I N E =======================================
+    3740/    20B0 :                     
+    3741/    20B0 :                     ; a6 - $C00000
+    3742/    20B0 :                     ; a4 - RAM_Fami_Emu
+    3743/    20B0 :                     
+    3744/    20B0 :                     Nemul_LoadChr:
+    3745/    20B0 : 46FC 2700           		move.w	#$2700,sr
+    3746/    20B4 : 3D7C 8F02 0004      		move.w	#$8F02,4(a6)
+    3747/    20BA : 2D7C 4000 0000 0004 		move.l	#$40000000,4(a6)
+    3748/    20C2 : 7A00                		moveq	#0,d5
+    3749/    20C4 : 3C2C 0040           		move.w	ppuChrBank(a4),d6
+    3750/    20C8 : 6100 0014           		bsr.w	.make_chr
+    3751/    20CC : 7A08                		moveq	#8,d5
+    3752/    20CE : 3C2C 0040           		move.w	ppuChrBank(a4),d6
+    3753/    20D2 : E30E                		lsl.b	#1,d6
+    3754/    20D4 : 6100 0008           		bsr.w	.make_chr
+    3755/    20D8 : 46FC 2000           		move.w	#$2000,sr
+    3756/    20DC : 4E75                		rts
+    3757/    20DE :                     
+    3758/    20DE :                     .make_chr:
+    3759/    20DE : 2A4B                		movea.l	a3,a5
+    3760/    20E0 : E30E                		lsl.b	#1,d6
+    3761/    20E2 : 6406                		bcc.s	loc_8DBA
+    3762/    20E4 : DBFC 0000 1000      		adda.l	#$1000,a5
+    3763/    20EA :                     loc_8DBA:
+    3764/    20EA : 48E7 FF00           		movem.l	d0-d2/d3-d7,-(sp)
+    3765/    20EE : 2E3C 0000 00FF      		move.l	#$FF,d7
+    3766/    20F4 :                     loc_8DC4:
+    3767/    20F4 : 7607                		moveq	#7,d3
+    3768/    20F6 :                     loc_8DC6:
+    3769/    20F6 : 1215                		move.b	(a5),d1
+    3770/    20F8 : 142D 0008           		move.b	8(a5),d2
+    3771/    20FC : 7000                		moveq	#0,d0
+    3772/    20FE : 7C07                		moveq	#7,d6
+    3773/    2100 :                     loc_8DD0:
+    3774/    2100 : D402                		add.b	d2,d2
+    3775/    2102 : D140                		addx.w	d0,d0
+    3776/    2104 : D201                		add.b	d1,d1
+    3777/    2106 : D140                		addx.w	d0,d0
+    3778/    2108 : 51CE FFF6           		dbf	d6,loc_8DD0
+    3779/    210C : 7800                		moveq	#0,d4
+    3780/    210E : 7C07                		moveq	#7,d6
+    3781/    2110 :                     loc_8DE0:
+    3782/    2110 : 1200                		move.b	d0,d1
+    3783/    2112 : E448                		lsr.w	#2,d0
+    3784/    2114 : 0281 0000 0003      		andi.l	#3,d1
+    3785/    211A : 6702                		beq.s	loc_8DEE
+    3786/    211C : 8205                		or.b	d5,d1
+    3787/    211E :                     loc_8DEE:
+    3788/    211E : 8801                		or.b	d1,d4
+    3789/    2120 : E89C                		ror.l	#4,d4
+    3790/    2122 : 51CE FFEC           		dbf	d6,loc_8DE0
+    3791/    2126 : 2C84                		move.l	d4,(a6)
+    3792/    2128 : 528D                		addq.l	#1,a5
+    3793/    212A : 51CB FFCA           		dbf	d3,loc_8DC6
+    3794/    212E : 508D                		addq.l	#8,a5
+    3795/    2130 : 51CF FFC2           		dbf	d7,loc_8DC4
+    3796/    2134 : 4CDF 00FF           		movem.l	(sp)+,d0-d2/d3-d7
+    3797/    2138 :                     return_8E08:
+    3798/    2138 : 4E75                		rts
+    3799/    213A :                     
+    3800/    213A :                     ; ====================================================================
+    3801/    213A :                     
+    3802/    213A :                     		align $8000
+    3803/    8000 :                     EndOfRom:
+    3804/    8000 :                     
+    3805/    8000 :                     ; ====================================================================
     3806/    8000 :                     ; ----------------------------------------------------------------
-    3807/    8000 :                     
-    3808/    8000 :                     ROM_FILE:	binclude "roms/karateka.nes"
-    3809/    E010 :                     
- AS V1.42 Beta [Bld 118] - source file md.asm - page 2 - 10/15/2020 18:03:21
+    3807/    8000 :                     ; ROM are here
+    3808/    8000 :                     ; ----------------------------------------------------------------
+    3809/    8000 :                     
+    3810/    8000 :                     ROM_FILE:	binclude "roms/karateka.nes"
+    3811/    E010 :                     
+ AS V1.42 Beta [Bld 118] - source file md.asm - page 2 - 10/15/2020 18:09:24
 
 
   symbol table (* = unused):
@@ -4293,9 +4295,9 @@
  LOC_1EC4 :                    1998 C |  LOC_1ED3 :                    19AC C |
  LOC_1EE0 :                    19B8 C |  LOC_210 :                      214 C |
  LOC_23A6 :                    1A0E C |  LOC_23F4 :                    1A4C C |
- LOC_270 :                      26A C |  LOC_29C0 :                    2076 C |
- LOC_29C0.ROM_1 :              2088 C |  LOC_29D8 :                    2094 C |
- LOC_29E2 :                    20A0 C |  LOC_2A16 :                    1C48 C |
+ LOC_270 :                      26A C |  LOC_29C0 :                    207E C |
+ LOC_29C0.ROM_1 :              2090 C |  LOC_29D8 :                    209C C |
+ LOC_29E2 :                    20A8 C |  LOC_2A16 :                    1C48 C |
  LOC_2A16.NOVINTFLAG :         1C52 C |  LOC_2A2C :                    1C5E C |
  LOC_2A2C.NO_RELOAD :          1C76 C |  LOC_2A2C.NRML_INCR :          1C7E C |
  LOC_2A5E :                    1C90 C |  LOC_2A5E.HIDEBG :             1CA8 C |
@@ -4303,10 +4305,10 @@
  LOC_2ABE :                    1D06 C |  LOC_2ACC :                    1D18 C |
  LOC_2AD0 :                    1D1E C |  LOC_2AE2 :                    1D32 C |
  LOC_2AE6 :                    1D38 C |  LOC_51E :                      30A C |
- LOC_8DA :                      318 C |  LOC_8DBA :                    20E2 C |
- LOC_8DC4 :                    20EC C |  LOC_8DC6 :                    20EE C |
- LOC_8DD0 :                    20F8 C |  LOC_8DE0 :                    2108 C |
- LOC_8DEE :                    2116 C |  LOC_8E0 :                      31E C |
+ LOC_8DA :                      318 C |  LOC_8DBA :                    20EA C |
+ LOC_8DC4 :                    20F4 C |  LOC_8DC6 :                    20F6 C |
+ LOC_8DD0 :                    2100 C |  LOC_8DE0 :                    2110 C |
+ LOC_8DEE :                    211E C |  LOC_8E0 :                      31E C |
  LOC_8F0 :                      32E C |  LOC_904 :                      342 C |
  LOC_9F4 :                      4CE C |  LOC_A10 :                      4E2 C |
  LOC_E34 :                      7B8 C |  LOC_E44 :                      7CA C |
@@ -4326,7 +4328,7 @@
  MD_VINT.WAIT2 :                42E C | *MOMCPU :                     68000 - |
 *MOMCPUNAME :                 68000 - |  MOSCPU :                       5B4 C |
  MOS_BRK :                      B2C C |  MOS_NULL :                     7B4 C |
- NEMUL_LOADCHR :               20A8 C |  NEMUL_LOADCHR.MAKE_CHR :      20D6 C |
+ NEMUL_LOADCHR :               20B0 C |  NEMUL_LOADCHR.MAKE_CHR :      20DE C |
 *NESTMAX :                      100 - |  OAMSPRDATA :                    E2 C |
  OFF_23D4 :                    1A3C C |  OFF_2866 :                    1B1E C |
  OFF_29F6 :                    1C38 C |  OLD_MD :                       23E C |
@@ -4335,10 +4337,10 @@
  PPUADDRINCR :                   44 C |  PPUADDRLATCH :                  4E C |
  PPUCHRBANK :                    40 C |  PPUDATALAST :                   48 C |
  PPUDRWCELL :                  1E68 C |  PPUDRWCELL.LEFT_PG :          1E94 C |
- PPUDRWCELL.TOP_LYR :          1E8A C |  PPUDRWCELL.VERMIRROR :        1EFC C |
- PPUDRWCELLPAL :               1F2C C |  PPUDRWCELLPAL.LEFT_PG :       1F5C C |
- PPUDRWCELLPAL.MAKE_ATTR :     1F8C C |  PPUDRWCELLPAL.PICK_COLOR :    1FFE C |
- PPUDRWCELLPAL.TOP_LYR :       1F52 C |  PPUDRWCELLPAL.VERT_MIRR :     1F7A C |
+ PPUDRWCELL.TOP_LYR :          1E8A C |  PPUDRWCELL.VERMIRROR :        1F00 C |
+ PPUDRWCELLPAL :               1F34 C |  PPUDRWCELLPAL.LEFT_PG :       1F64 C |
+ PPUDRWCELLPAL.MAKE_ATTR :     1F94 C |  PPUDRWCELLPAL.PICK_COLOR :    2006 C |
+ PPUDRWCELLPAL.TOP_LYR :       1F5A C |  PPUDRWCELLPAL.VERT_MIRR :     1F82 C |
  PPUMIRROR :                     2E C |  PPUNMIFLAG :                    52 C |
  PPUNTBLBASE :                   3E C |  PPUOAMADDR :                    42 C |
  PPUOAMUNK :                     50 C |  PPUSETCOLOR :                 1DB8 C |
@@ -4354,8 +4356,8 @@
  READINPUT :                   1B70 C |  READINPUT.THIS_PAD :          1B86 C |
 *RELAXED :                        0 - |  RETURN_2418 :                 1A78 C |
  RETURN_2418.NOVFLAG :         1A92 C |  RETURN_2418.NO_HIT :          1A82 C |
- RETURN_241A :                 1A98 C | *RETURN_8E08 :                 2130 C |
- ROMGRABPRG :                  2060 C |  ROM_FILE :                    8000 C |
+ RETURN_241A :                 1A98 C | *RETURN_8E08 :                 2138 C |
+ ROMGRABPRG :                  2068 C |  ROM_FILE :                    8000 C |
  SOUND_LOADZ80 :                314 C |  SOUND_PSGINIT :                32C C |
 *SYSCD_ARGS_M :              A12010 - | *SYSCD_ARGS_S :              A12020 - |
 *SYSCD_BUS :                 A12000 - | *SYSCD_CDCHOST :             A12008 - |
@@ -4367,7 +4369,7 @@
 *SYS_CTRL_3 :                A1000D - | *SYS_DATA_1 :                A10003 - |
 *SYS_DATA_2 :                A10005 - | *SYS_DATA_3 :                A10007 - |
 *SYS_EXRAM :                 200000 - | *SYS_IO :                    A10001 - |
-*SYS_TMSS :                  A14000 - | *TIME :                    18:03:21 - |
+*SYS_TMSS :                  A14000 - | *TIME :                    18:09:24 - |
 *TRUE :                           1 - | *VARNULLVRAM :                  7FF - |
  VDPHINTSP0 :                    56 C |  VDPPALETTE :                    62 C |
  VDPREG01 :                      2C C |  VDPSCRLX :                      5A C |
@@ -4391,7 +4393,7 @@
     439 symbols
     117 unused symbols
 
- AS V1.42 Beta [Bld 118] - source file md.asm - page 3 - 10/15/2020 18:03:21
+ AS V1.42 Beta [Bld 118] - source file md.asm - page 3 - 10/15/2020 18:09:24
 
 
   defined macros:
@@ -4403,7 +4405,7 @@ ROMPAD                                | STRUCT
 
       6 macros
 
- AS V1.42 Beta [Bld 118] - source file md.asm - page 4 - 10/15/2020 18:03:21
+ AS V1.42 Beta [Bld 118] - source file md.asm - page 4 - 10/15/2020 18:09:24
 
 
   defined functions:
@@ -4413,7 +4415,7 @@ NOTZ80                                | LOCATE
 MAPSIZE                               | DOUBLEWORD                           
 M68K_ADDR                             |
 
- AS V1.42 Beta [Bld 118] - source file md.asm - page 5 - 10/15/2020 18:03:21
+ AS V1.42 Beta [Bld 118] - source file md.asm - page 5 - 10/15/2020 18:09:24
 
 
   codepages:
@@ -4422,10 +4424,10 @@ M68K_ADDR                             |
 STANDARD (0 changed characters)
 
 
-0.03 seconds assembly time
+0.06 seconds assembly time
 
-   4118 lines source file
-   4130 lines incl. macro expansions
+   4120 lines source file
+   4132 lines incl. macro expansions
       3 passes
       0 errors
       0 warnings
