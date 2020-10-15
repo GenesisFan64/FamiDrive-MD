@@ -49,8 +49,6 @@ RAM_EmuLoop	ds.w 3
 		struct 0
 emuPrgRom	ds.l 1
 emuChrRom	ds.l 1
-famiTemp1	ds.l 1
-famiTemp2	ds.l 1
 famiVintSave	ds.l 8
 famiVintSave2	ds.w 1
 cpuSprHint	ds.w 1;equ -$38
@@ -305,7 +303,7 @@ loc_904:
 
 ; ----------------------------------------------------------------
 byte_910:
-		dc.b $14			; HBlank int on, HV Counter on
+		dc.b $04			; HBlank int on, HV Counter on
 		dc.b $64			; Display ON, VBlank int on
 		dc.b (($C000)>>10)		; ForeGrd at VRAM $C000 (%00xxx000)
 		dc.b (($D000)>>10)		; Window  at VRAM $D000 (%00xxxxy0)
@@ -548,7 +546,7 @@ doVint:
 ; 		move.b	d7,(a2,d3.w)
 ; 		swap	d3
 
-		movem.l	d7/a0/a5,famiVintSave(a4)
+		movem.l	a0/a5,famiVintSave(a4)
 		move.w	d3,famiVintSave2(a4)
 		lea 	(RAM_Fami_ROM),a0	; PRG base
 		move.w	#cpuNMI,d6		; go to NMI
@@ -1830,20 +1828,18 @@ loc_1660:
 		move.b	1(a0),d6
 		lsl.w	#8,d6
 		move.b	(a0),d6
-
 		move.b	(a2,d6.w),d4
 		add.b	#1,d6
 		move.b	(a2,d6.w),d6
 		lsl.w	#8,d6
 		or.b	d4,d6
-		
-	; TODO: Add more jump locations
+
+	; TODO: Check for more jump locations
 		tst.w	d6
 		bmi.s	.to_rom
 		move.l	a2,a0
 		adda	d6,a0
 		jmp	(RAM_EmuLoop).l
-
 .to_rom:
 		and.l	#$7FFF,d6
 		movea.l a1,a0
@@ -2516,7 +2512,7 @@ loc_1BD0:				; DATA XREF: ROM:00000C2Ao
 loc_1BF6:
 		tst.w	cpuFamiVint(a4)
 		beq.s	.nonint
-		movem.l	famiVintSave(a4),d7/a0/a5
+		movem.l	famiVintSave(a4),a0/a5
 		move.w	famiVintSave2(a4),d3
 
 ; 		movem.l	famiVintSave(a4),d7/a5
@@ -2537,15 +2533,9 @@ loc_1BF6:
 		move.b	d4,d6
 		swap	d3
 		move.b	d5,d3
-
-		move.l	d6,famiTemp1(a4)
 		and.l	#$7FFF,d6
 		movea.l a1,a0
 		add.l 	d6,a0
-		move.l	d6,famiTemp2(a4)
-		
-; 		cmp.w	#$
-; 		bra.s	*
 		jmp	(RAM_EmuLoop).l
 
 ; ----------------------------------------------------------------
@@ -2899,7 +2889,7 @@ loc_1Ed3:
 		jmp	(RAM_EmuLoop).l
 ; ----------------------------------------------------------------
 
-loc_1EE0:				; DATA XREF: ROM:00000C92o
+loc_1EE0:
 		move.b	d2,d0
 		move	sr,d5
 		andi.w	#$C,d5
@@ -3005,13 +2995,14 @@ rdPPU_Status:
 		move.w	#0,ppuStatus(a4)
 
 	; sprite 0 beam hit
-; 		move.w	ppuSp0Ypos(a4),d4
-; 		move.w	8(a6),d5
-; 		lsr.w	#8,d5
-; 		cmp.b	d5,d4
-; 		bcs.s	return_2418
-; 		ori.w	#$40,d7
-; return_2418:
+		move.w	#$2700,sr
+		move.w	ppuSp0Ypos(a4),d4
+		move.w	8(a6),d5
+		lsr.w	#8,d5
+		cmp.b	d5,d4
+		bcs.s	return_2418
+		ori.w	#$40,d7
+return_2418:
 		move.w	vdpHintSp0(a4),d4
 		beq.s	.no_hit
 		ori.w	#$40,d7
@@ -3022,6 +3013,7 @@ rdPPU_Status:
 		beq.s	.novflag
 		ori.w	#$80,d7
 .novflag:
+		move.w	#$2000,sr
 		rts
 ; ----------------------------------------------------------------
 
@@ -3220,11 +3212,7 @@ APU_OAMDMA:
 		eori.w	#1,d6
 		move.b	ppuOamAddr(a4,d6.w),d7
 		lea	(a2,d7.w),a5
-		move.w	#$8A00,d7
-		move.b	(a5),d7
 		move.b	d7,ppuSp0Ypos+1(a4)		; sprite 0 ypos
-		sub.w	#1,d7
-		move.w	d7,4(a6)
 
 		lea 	oamSprData(a4),a3
 		moveq	#$3F,d5
@@ -3515,6 +3503,7 @@ ppuVdpColors:	dc.w $666
 		dc.w 0
 		dc.w 0
 ; ----------------------------------------------------------------
+; Set Cell character
 
 ppuDrwCell:
 	; d4 - ppu address
@@ -3541,43 +3530,178 @@ ppuDrwCell:
 		beq.s	.left_pg
 		add.w	#$40,d6
 .left_pg:
-		or.w	#$4000,d6
 		move.w	#$2700,sr
+		and.w	#$FF,d7
+		or.w	#$8000,d7
+		
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)
-
-		move.w	d7,d4
-		and.w	#$FF,d4
-		or.w	#$8000,d4
+		move.w	(a6),d4
+		and.w	#$E000,d4
+		or.w	d7,d4
+		or.w	#$4000,d6
+		move.w	d6,4(a6)
+		move.w	#3,4(a6)
 		move.w	d4,(a6)
-		tst.w	ppuMirror(a4)			; horizontal mirror check
+		and.w	#$3FFF,d4
+
+		tst.w	ppuMirror(a4)		; check horizontal mirror
 		bne.s	.vermirror
-		move.w	d6,d5	
-		add.w	#$40,d6
-		and.w	#$40,d6
-		and.w	#$FFBF,d5
-		or.w	d5,d6
+
+		bchg	#6,d6
+		move.w	d6,4(a6)
+		move.w	#3,4(a6)
+		move.w	(a6),d4
+		and.w	#$E000,d4
+		or.w	d7,d4
+		or.w	#$4000,d6
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)
 		move.w	d4,(a6)
 		move.w	#$2000,sr
 		jmp	(RAM_EmuLoop).l
 .vermirror:
-		and.w	#$3FFF,d6
 		add.w	#$2000,d6
+		move.w	d6,4(a6)
+		move.w	#3,4(a6)
+		move.w	(a6),d4
+		and.w	#$E000,d4
+		or.w	d7,d4
 		or.w	#$4000,d6
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)
 		move.w	d4,(a6)
+
 		move.w	#$2000,sr
 		jmp	(RAM_EmuLoop).l
 
 ; ----------------------------------------------------------------
+; Pick Tile 16x16 color
 
 ppuDrwCellPal:
-	; TODO: rewrite
+	; d4 - Page
+	; d5 - X pos
+	; d6 - Y pos
+	; d7 - attr
+		move.w	d4,d5
+		move.w	d4,d6
+		and.w	#%111,d5
+		lsl.w	#3,d5
+		and.w	#%111000,d6
+		lsl.w	#6,d6
+		swap	d7
+		move.w	d4,d7
+		and.w	#$C00,d7
+		lsr.w	#8,d7
+		lsr.w	#2,d7
+		btst	#1,d7
+		beq.s	.top_lyr
+		add.w	#$2000,d6
+.top_lyr:
+		btst	#0,d7
+		beq.s	.left_pg
+		add.w	#$40,d6
+.left_pg:
+		swap	d7
+		move.w	#$0000,d4
+		add.w	d6,d4
+		add.w	d5,d4
+
+	; d4 - VDP address
+	; d5 - Palette bits
+		swap	d7
+		move.w	d4,d7
+		swap	d7
+		bsr.s	.make_attr
+		tst.w	ppuMirror(a4)		; check horizontal mirror
+		bne	.vert_mirr
+		jmp	(RAM_EmuLoop).l
+.vert_mirr:
+		swap	d7
+		move.w	d7,d4
+		swap	d7
+		add.w	#$2000,d4
+		bsr.s	.make_attr
 		jmp	(RAM_EmuLoop).l
 
+; ----------------------------------------------------------------
+; d4 - VDP plane pos
+; d7 - pal bits
+
+.make_attr:
+		moveq	#0,d5			; TL
+		move.b	d7,d5
+		and.w	#%11,d5
+		lsl.w	#8,d5
+		lsl.w	#5,d5
+		swap	d5
+		move.b	d7,d5
+		and.w	#%11,d5
+		lsl.w	#8,d5
+		lsl.w	#5,d5
+		bsr	.pick_color
+		add.w	#4,d4			; TR
+		moveq	#0,d5
+		move.b	d7,d5
+		and.w	#%1100,d5
+		lsl.w	#8,d5
+		lsl.w	#3,d5
+		swap	d5
+		move.b	d7,d5
+		and.w	#%1100,d5
+		lsl.w	#8,d5
+		lsl.w	#3,d5
+		bsr	.pick_color
+		sub.w	#4,d4			; BL
+		add.w	#$100,d4
+		moveq	#0,d5
+		move.b	d7,d5
+		and.w	#%110000,d5
+		lsl.w	#8,d5
+		lsl.w	#1,d5
+		swap	d5
+		move.b	d7,d5
+		and.w	#%110000,d5
+		lsl.w	#8,d5
+		lsl.w	#1,d5
+		bsr	.pick_color
+		add.w	#4,d4			; BR
+		moveq	#0,d5
+		move.b	d7,d5
+		and.w	#%11000000,d5
+		lsl.w	#7,d5
+		swap	d5
+		move.b	d7,d5
+		and.w	#%11000000,d5
+		lsl.w	#7,d5
+; 		bsr	.pick_color
+
+.pick_color:
+		move.w	#$2700,sr
+		move.w	d4,4(a6)
+		move.w	#3,4(a6)
+		move.l	(a6),d6
+		and.l	#$9FFF9FFF,d6
+		or.l	d5,d6
+		or.w	#$4000,d4
+		move.w	d4,4(a6)
+		move.w	#3,4(a6)
+		move.l	d6,(a6)
+		and.w	#$3FFF,d4
+		add.w	#$80,d4
+		move.w	d4,4(a6)
+		move.w	#3,4(a6)
+		move.l	(a6),d6
+		and.l	#$9FFF9FFF,d6
+		or.l	d5,d6
+		or.w	#$4000,d4
+		move.w	d4,4(a6)
+		move.w	#3,4(a6)
+		move.l	d6,(a6)
+		and.w	#$3FFF,d4
+		sub.w	#$80,d4
+		move.w	#$2000,sr
+		rts
 
 ; =============== S U B	R O U T	I N E =======================================
 
