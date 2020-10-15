@@ -17,6 +17,5 @@ Current issues/TODO:
 - No sound at all, no plans for it
 - Control reading is not implemented correctly
 - Some games doesn't work
-- Implement background color mirroring
+- Partial palette mirorring
 - Changed the way it draws the screen background, but palette selection isn't done yet
-- Emulated stack ($100-$1FF) needs more testing

@@ -49,7 +49,9 @@ RAM_EmuLoop	ds.w 3
 		struct 0
 emuPrgRom	ds.l 1
 emuChrRom	ds.l 1
-famiVintSave	ds.l 3
+famiTemp1	ds.l 1
+famiTemp2	ds.l 1
+famiVintSave	ds.l 8
 famiVintSave2	ds.w 1
 cpuSprHint	ds.w 1;equ -$38
 vdpReg01	ds.w 1;equ -$36
@@ -390,12 +392,6 @@ MD_Hint:
 		move.w	#$2700,sr
 		move.w	#$8ADF,4(a6)
 		move.w	#1,vdpHintSp0(a4)
-; 		move.l	#$C0080000,4(a6)		; for TESTING only
-; 		move.w	#0,(a6)
-		move.l	#$78000002,4(a6)
-		move.l	vdpScrlX(a4),(a6)
-		move.l	#$40000010,4(a6)
-		move.l	vdpScrlY(a4),(a6)
 		rte
 
 ; ====================================================================
@@ -537,6 +533,7 @@ doVint:
 		move.l	#emuVint,(RAM_EmuLoop+2).l
 		move.w	#1,cpuFamiVint(a4)
 
+; 		movem.l	d7/a5,famiVintSave(a4)
 ; 		move.w	d3,d7
 ; 		swap	d3
 ; 		move.l	a0,d6
@@ -550,7 +547,6 @@ doVint:
 ; 		subq.w	#1,d3
 ; 		move.b	d7,(a2,d3.w)
 ; 		swap	d3
-; 		movem.l	d7/a5,famiVintSave(a4)
 
 		movem.l	d7/a0/a5,famiVintSave(a4)
 		move.w	d3,famiVintSave2(a4)
@@ -1834,12 +1830,24 @@ loc_1660:
 		move.b	1(a0),d6
 		lsl.w	#8,d6
 		move.b	(a0),d6
-		move.b	1(a2,d6.w),d4
-		lsl.w	#8,d4
+
 		move.b	(a2,d6.w),d4
-		and.l	#$7FFF,d4
+		add.b	#1,d6
+		move.b	(a2,d6.w),d6
+		lsl.w	#8,d6
+		or.b	d4,d6
+		
+	; TODO: Add more jump locations
+		tst.w	d6
+		bmi.s	.to_rom
+		move.l	a2,a0
+		adda	d6,a0
+		jmp	(RAM_EmuLoop).l
+
+.to_rom:
+		and.l	#$7FFF,d6
 		movea.l a1,a0
-		add.l 	d4,a0
+		add.l 	d6,a0
 		jmp	(RAM_EmuLoop).l
 
 ; ----------------------------------------------------------------
@@ -1852,6 +1860,7 @@ loc_167C:
 		move.b	(a0),d6
 		lsl.w	#8,d6
 		move.b	d4,d6
+
 loc_1686:
 		swap	d3
 		move.w	a0,d4
@@ -1863,8 +1872,7 @@ loc_1686:
 		move.b	d5,(a2,d3.w)
 		subq.b	#1,d3
 		swap	d3
-; 		lea	(a2,d6.l),a0
-
+		
 		and.l	#$7FFF,d6
 		movea.l a1,a0
 		add.l 	d6,a0
@@ -2530,9 +2538,14 @@ loc_1BF6:
 		swap	d3
 		move.b	d5,d3
 
+		move.l	d6,famiTemp1(a4)
 		and.l	#$7FFF,d6
 		movea.l a1,a0
 		add.l 	d6,a0
+		move.l	d6,famiTemp2(a4)
+		
+; 		cmp.w	#$
+; 		bra.s	*
 		jmp	(RAM_EmuLoop).l
 
 ; ----------------------------------------------------------------
@@ -3423,20 +3436,16 @@ ppuSetColor:
 		andi.w	#$1F,d4
 		add.w	d4,d4
 		move.w	ppuVdpIndex(pc,d4.w),d4
-		lea 	vdpPalette(a4,d4.w),a5
+		move.w	d4,d6
 		move.w	d7,d5
 		andi.b	#$3F,d5
-		move.w	d5,d4
 		add.w	d5,d5
-		move.w	ppuVdpColors(pc,d5.w),(a5)
-		move.w	d4,d5
-		and.w	#%0111,d5
+		move.w	ppuVdpColors(pc,d5.w),vdpPalette(a4,d4.w)
+		and.w	#$F,d6
 		bne.s	.no_bgpal
-		lea	(RAM_Fami_Emu+vdpPalette),a5
-; 		move.w	$08(a5),$00(a5)
-; 		move.w	$28(a5),$20(a5)	
-; 		move.w	$38(a5),$30(a5)
-; 		move.w	$48(a5),$40(a5)
+		bchg	#4,d4
+		move.w	ppuVdpColors(pc,d5.w),vdpPalette(a4,d4.w)
+		
 .no_bgpal:
 		jmp	(RAM_EmuLoop).l
 ; ----------------------------------------------------------------
@@ -3672,4 +3681,4 @@ EndOfRom:
 ; ROM are here
 ; ----------------------------------------------------------------
 
-ROM_FILE:	binclude "roms/nestest.nes"
+ROM_FILE:	binclude "roms/karateka.nes"
