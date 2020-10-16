@@ -7,15 +7,13 @@ originally made by Mairtrus, so credits to him for his effort...
 
 Features:
 - Original version didn't work on hardware, this one does
-- Added support for another mapper other than mapper0: CNROM
+- Added support for another mapper other than mapper 0: CNROM
 - Working vertical scrolling using both scroll layers (Map height is different than MD's)
 
 Current issues/TODO:
-- SLOW, probably will stay like this.
-- Graphic glitches (bad timing)
-- Bad sprite 0 timing (too slow)
+- *SLOW*, at least this system can do something like this.
+- Graphic glitches (bad timing, affects sprite 0 hit)
 - No sound at all, no plans for it
-- Control reading is not implemented correctly
+- Sprite 8x16 mode not done (it's different than MD's sprite size 8x16)
+- Control reading is not implemented correctly (not 6pad safe)
 - Some games doesn't work
-- Partial palette mirorring
-- Changed the way it draws the screen background, but palette selection isn't done yet

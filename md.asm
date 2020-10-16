@@ -52,6 +52,7 @@ emuChrRom	ds.l 1
 famiVintSave	ds.l 8
 famiVintSave2	ds.w 1
 cpuSprHint	ds.w 1;equ -$38
+vdpReg00	ds.w 1
 vdpReg01	ds.w 1;equ -$36
 ppuMirror	ds.w 1;equ -$34
 cpuMapper	ds.w 1;equ -$32
@@ -74,10 +75,11 @@ ppuNmiFlag	ds.w 1;equ -4
 ppuStatus	ds.w 1;equ -2
 vdpHintSp0	ds.w 1
 FamiMdVint	ds.w 1
+FamiPPUVint	ds.w 1
 vdpScrlX	ds.l 1
 vdpScrlY	ds.l 1
 vdpPalette	ds.w 64
-oamSprData	ds.w 8*70
+vdpSprData	ds.w 8*64
 		finish
 
 ; ====================================================================
@@ -359,8 +361,8 @@ MD_Vint:
 		move.l	vdpScrlY(a4),(a6)
 		move.l	#$94019318,4(a6)
 		move.w	#$0100,(z80_bus).l
-		move.l	#$96009500+(((RAM_Fami_Emu+oamSprData)<<7)&$FF0000)|(((RAM_Fami_Emu+oamSprData)>>1)&$FF),4(a6)
-		move.w	#$9700|(((RAM_Fami_Emu+oamSprData)>>17)&$7F),4(a6)
+		move.l	#$96009500+(((RAM_Fami_Emu+vdpSprData)<<7)&$FF0000)|(((RAM_Fami_Emu+vdpSprData)>>1)&$FF),4(a6)
+		move.w	#$9700|(((RAM_Fami_Emu+vdpSprData)>>17)&$7F),4(a6)
 		move.w	#$7C00,4(a6)
 		move.w	#$0002|$80,-(sp)
 .wait:		btst	#0,(z80_bus).l
@@ -378,6 +380,7 @@ MD_Vint:
 
 		clr.w	vdpHintSp0(a4)
 		move.w	#1,FamiMdVint(a4)
+		move.w	#1,FamiPPUVint(a4)
 		movem.l	(sp)+,d0-d7/a0-a6
 		rte
 
@@ -387,9 +390,9 @@ MD_Vint:
 ; ----------------------------------------------------------------
 
 MD_Hint:
-		move.w	#$2700,sr
-		move.w	#$8ADF,4(a6)
-		move.w	#1,vdpHintSp0(a4)
+; 		move.w	#$2700,sr
+; 		move.w	#$8ADF,4(a6)
+; 		move.w	#1,vdpHintSp0(a4)
 		rte
 
 ; ====================================================================
@@ -454,6 +457,13 @@ loc_A10:
 ; ----------------------------------------------------------------
 
 emuStart:
+		lea 	($FFFF8000),a0
+		move.w	#$2FFF/4,d1
+		moveq	#0,d0
+.clrram:
+		move.l	d0,(a0)+
+		dbf	d1,.clrram
+
 		lea	(ROM_FILE).l,a0
 		bsr	Fami_LoadRom
 		
@@ -472,6 +482,7 @@ emuStart:
 		and.w	#$7FFF,d0
 		movea.l	a1,a0
 		adda	d0,a0
+		move.w	#$8004,vdpReg00(a4)
 		move.w	#$8174,vdpReg01(a4)
 		move.w	#$4EF9,(RAM_EmuLoop).l
 		move.l	#emuLoop,(RAM_EmuLoop+2).l
@@ -2997,20 +3008,23 @@ rdPPU_Status:
 	; sprite 0 beam hit
 		move.w	#$2700,sr
 		move.w	ppuSp0Ypos(a4),d4
+		cmp.w	#$E0,d4
+		bge.s	.setspron
 		move.w	8(a6),d5
 		lsr.w	#8,d5
 		cmp.b	d5,d4
-		bcs.s	return_2418
+		bne.s	return_2418
+.setspron:
 		ori.w	#$40,d7
 return_2418:
-		move.w	vdpHintSp0(a4),d4
-		beq.s	.no_hit
-		ori.w	#$40,d7
-; 		clr.w	vdpHintSp0(a4)
-.no_hit:
-		move.w	(vdp_ctrl),d4
-		btst	#bitVint,d4
+
+		tst.w	FamiPPUVint(a4)
 		beq.s	.novflag
+		clr.w	FamiPPUVint(a4)
+		
+; 		move.w	(vdp_ctrl),d4
+; 		btst	#bitVint,d4
+; 		beq.s	.novflag
 		ori.w	#$80,d7
 .novflag:
 		move.w	#$2000,sr
@@ -3214,7 +3228,7 @@ APU_OAMDMA:
 		lea	(a2,d7.w),a5
 		move.b	d7,ppuSp0Ypos+1(a4)		; sprite 0 ypos
 
-		lea 	oamSprData(a4),a3
+		lea 	vdpSprData(a4),a3
 		moveq	#$3F,d5
 		moveq	#0,d7
 .lp_sprnormal:
@@ -3222,12 +3236,16 @@ APU_OAMDMA:
 		move.w	d7,d6
 		addi.w	#$79,d6
 		move.w	d6,(a3)+
+
 		moveq	#64,d6
 		sub.b	d5,d6
+		or.w	ppuSprWide(a4),d6
 		move.w	d6,(a3)+
+		
 		move.b	(a5)+,d7
 		move.w	d7,d6
 		ori.w	#$100,d6
+
 		move.b	(a5)+,d7
 		move.w	d7,d4
 		rol.b	#2,d4
@@ -3237,10 +3255,12 @@ APU_OAMDMA:
 		or.w	d6,d4
 		eori.w	#$8000,d4
 		move.w	d4,(a3)+
+
 		move.b	(a5)+,d7
 		move.w	d7,d6
 		addi.w	#$80,d6
 		move.w	d6,(a3)+
+
 		dbf	d5,.lp_sprnormal
 		move.l	(sp)+,a3
 		move.l	(sp)+,d7
@@ -3284,7 +3304,7 @@ loc_2A16:
 		clr.w	d6
 		lsl.b	#2,d7
 		bcc.s	loc_2A2C
-		moveq	#1,d6
+		move.w	#$100,d6
 loc_2A2C:
 		move.w	d6,ppuSprWide(a4)
 		
@@ -3315,6 +3335,9 @@ loc_2A2C:
 ; ----------------------------------------------------------------
 
 loc_2A5E:
+		move.w	#$2700,sr
+
+	; Hide sprites and BG
 		move.w	#$8500+(($A000)>>9),d6
 		swap	d6
 		move.w	vdpReg01(a4),d6		; REGISTER 81
@@ -3331,6 +3354,16 @@ loc_2A5E:
 		move.l	d6,4(a6)
 		swap	d6
 		move.w	d6,vdpReg01(a4)
+
+		move.w	vdpReg00(a4),d6
+		bset	#5,d6
+		btst	#1,d7
+		beq.s	.hide_bg
+		bclr	#5,d6
+.hide_bg:
+		move.w	d6,4(a6)
+		move.w	d6,vdpReg00(a4)
+		move.w	#$2000,sr
 
 		jmp	(RAM_EmuLoop).l
 
@@ -3530,10 +3563,10 @@ ppuDrwCell:
 		beq.s	.left_pg
 		add.w	#$40,d6
 .left_pg:
-		move.w	#$2700,sr
 		and.w	#$FF,d7
 		or.w	#$8000,d7
 		
+		move.w	#$2700,sr
 		move.w	d6,4(a6)
 		move.w	#3,4(a6)
 		move.w	(a6),d4
@@ -3617,6 +3650,11 @@ ppuDrwCellPal:
 		bsr.s	.make_attr
 		tst.w	ppuMirror(a4)		; check horizontal mirror
 		bne	.vert_mirr
+		swap	d7
+		move.w	d7,d4
+		swap	d7
+		add.w	#$40,d4
+		bsr.s	.make_attr
 		jmp	(RAM_EmuLoop).l
 .vert_mirr:
 		swap	d7
@@ -3807,4 +3845,4 @@ EndOfRom:
 ; ROM are here
 ; ----------------------------------------------------------------
 
-ROM_FILE:	binclude "roms/karateka.nes"
+ROM_FILE:	binclude "roms/castle.nes"
