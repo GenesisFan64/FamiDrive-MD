@@ -1,11 +1,9 @@
 ; ===========================================================================
 ; +-----------------------------------------------------------------+
 ; FamiDrive beta
-; 
 ; A Modification of Nemul by Mairtrus
-; (credit him for his original attempt)
 ; 
-; Fixed stuff, now works on real hardware
+; Now works on real hardware
 ; +-----------------------------------------------------------------+
 
 		include	"system/macros.asm"	; Assembler macros
@@ -484,9 +482,8 @@ emuStart:
 		adda	d0,a0
 		move.w	#$8004,vdpReg00(a4)
 		move.w	#$8174,vdpReg01(a4)
-		move.w	#$4EF9,(RAM_EmuLoop).l
-		move.l	#emuLoop,(RAM_EmuLoop+2).l
-
+		move.w	#$4EF9,(RAM_EmuLoop).l		; JMP opcode
+		move.l	#emuLoop,(RAM_EmuLoop+2).l	; default emulation loop
 		moveq	#0,d0
 		moveq	#0,d1
 		moveq	#0,d2
@@ -504,12 +501,16 @@ emuStart:
 ; d0 - A register
 ; d1 - X register
 ; d2 - Y register
-; d3 - Fami STACK Point | MD current sr
+; d3 - Fami STACK Point | Current SR
 ; d4 - free
 ; d5 - free
 ; d6 - free
 ; d7 - emu temporal input/output
 ; --------------------------------------------------------
+
+; TODO:
+; Actually implement Fami's SR, the
+; current SR is a copypaste of MD's status bits
 
 ; ------------------------------------------------
 ; Main Loop
@@ -542,23 +543,21 @@ doVint:
 		move.l	#emuVint,(RAM_EmuLoop+2).l
 		move.w	#1,cpuFamiVint(a4)
 
-; 		movem.l	d7/a5,famiVintSave(a4)
-; 		move.w	d3,d7
-; 		swap	d3
-; 		move.l	a0,d6
-; 		or.w	#$8000,d6
-; 		move.w	d6,d5
-; 		lsr.w	#8,d5
-; 		subq.w	#1,d3
-; 		move.b	d6,(a2,d3.w)
-; 		subq.w	#1,d3		
-; 		move.b	d5,(a2,d3.w)
-; 		subq.w	#1,d3
-; 		move.b	d7,(a2,d3.w)
-; 		swap	d3
+		move.w	d3,d7			; Save PC and SR
+		swap	d3
+		move.l	a0,d4
+		sub.l	#RAM_Fami_ROM,d4
+		move.b	d4,d5
+		lsr.w	#8,d4
+		or.b	#$80,d4
+		move.b	d4,(a2,d3.w)
+		subq.b	#1,d3
+		move.b	d5,(a2,d3.w)
+		subq.b	#1,d3
+		move.b	d7,(a2,d3.w)
+		subq.b	#1,d3
+		swap	d3
 
-		movem.l	a0/a5,famiVintSave(a4)
-		move.w	d3,famiVintSave2(a4)
 		lea 	(RAM_Fami_ROM),a0	; PRG base
 		move.w	#cpuNMI,d6		; go to NMI
 		add.w	d6,a0
@@ -949,7 +948,7 @@ loc_EF8:
 		jmp	(RAM_EmuLoop).l
 ; ----------------------------------------------------------------
 
-loc_F22:				; DATA XREF: ROM:00000Ad3o
+loc_F22:
 		move.b	(a0)+,d7
 		and.b	d7,d0
 		move	sr,d5
@@ -959,7 +958,7 @@ loc_F22:				; DATA XREF: ROM:00000Ad3o
 		jmp	(RAM_EmuLoop).l
 ; ----------------------------------------------------------------
 
-loc_F36:				; DATA XREF: ROM:00000AC6o
+loc_F36:
 		clr.w	d6
 		move.b	(a0)+,d6
 		move.b	(a2,d6.w),d7
@@ -2426,7 +2425,7 @@ loc_1B0C:				; DATA XREF: ROM:00000AEAo
 		jmp	(RAM_EmuLoop).l
 ; ----------------------------------------------------------------
 
-loc_1B30:				; DATA XREF: ROM:00000B2Ao
+loc_1B30:
 		move.b	(a0)+,d4
 		move.b	(a0)+,d6
 		lsl.w	#8,d6
@@ -2443,7 +2442,7 @@ loc_1B30:				; DATA XREF: ROM:00000B2Ao
 		jmp	(RAM_EmuLoop).l
 ; ----------------------------------------------------------------
 
-loc_1B56:				; DATA XREF: ROM:00000BDAo
+loc_1B56:
 		move	d3,sr
 		roxr.b	#1,d0
 		move	sr,d5
@@ -2453,7 +2452,7 @@ loc_1B56:				; DATA XREF: ROM:00000BDAo
 		jmp	(RAM_EmuLoop).l
 ; ----------------------------------------------------------------
 
-loc_1B6A:				; DATA XREF: ROM:00000BCAo
+loc_1B6A:
 		clr.w	d6
 		move.b	(a0)+,d6
 		move.b	(a2,d6.w),d7
@@ -2523,10 +2522,23 @@ loc_1BD0:				; DATA XREF: ROM:00000C2Ao
 loc_1BF6:
 		tst.w	cpuFamiVint(a4)
 		beq.s	.nonint
-		movem.l	famiVintSave(a4),a0/a5
-		move.w	famiVintSave2(a4),d3
+		
+		swap	d3			; Restore SR, PC
+		moveq	#0,d6
+		addq.b	#1,d3
+		move.b	(a2,d3.w),d5
+		addq.b	#1,d3
+		move.b	(a2,d3.w),d4
+		addq.b	#1,d3
+		move.b	(a2,d3.w),d6
+		lsl.w	#8,d6
+		move.b	d4,d6
+		swap	d3
+		move.b	d5,d3
+		and.l	#$7FFF,d6
+		movea.l a1,a0
+		add.l 	d6,a0
 
-; 		movem.l	famiVintSave(a4),d7/a5
 		move.l	#emuLoop,(RAM_EmuLoop+2).l
 		move.w	#0,cpuFamiVint(a4)
 		jmp	(RAM_EmuLoop).l
@@ -2564,7 +2576,6 @@ loc_1C32:
 		move.b	d4,d6
 		swap	d3
 		addq.w	#1,d6
-
 		and.l	#$7FFF,d6
 		movea.l a1,a0
 		add.l 	d6,a0
@@ -3845,4 +3856,4 @@ EndOfRom:
 ; ROM are here
 ; ----------------------------------------------------------------
 
-ROM_FILE:	binclude "roms/castle.nes"
+ROM_FILE:	binclude "roms/nestest.nes"
